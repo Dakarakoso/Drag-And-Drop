@@ -21,6 +21,7 @@ let listArrays = [];
 
 // Drag Functionality
 let draggedItem;
+let dragging = false;
 let currentColumn;
 
 // Get Arrays from localStorage if available, set default values if not
@@ -76,7 +77,17 @@ function createItemEl(columnEl, column, item, index) {
   listEl.contentEditable = true;
   listEl.id = index;
   listEl.setAttribute("onfocusout", `updateItem(${index}, ${column})`);
+  listEl.setAttribute("onclick", "editable(event)");
   columnEl.appendChild(listEl);
+}
+
+// additional function to handle click and make it also work in firefox
+function editable(el) {
+  // set the clicked list element as editable
+  el.target.contentEditable = true;
+  //set the focus on this element in order to be able to change the text
+  // and to keep the drag functionality working
+  el.target.focus();
 }
 
 // Update Columns in DOM - Reset HTML, Filter Array, Update localStorage
@@ -120,10 +131,14 @@ function updateItem(id, column) {
   // console.log(selectedArray);
   const selectedColumnEl = listsColumns[column].children;
   // console.log(selectedColumnEl[id].textContent);
-  if (!selectedColumnEl[id].textContent) {
-    delete selectedArray[id];
+  if (!dragging) {
+    if (!selectedColumnEl[id].textContent) {
+      delete selectedArray[id];
+    } else {
+      selectedArray[id] = selectedColumnEl[id].textContent;
+    }
+    updateDOM();
   }
-  updateDOM();
 }
 
 // add to column list
@@ -172,7 +187,8 @@ function rebuildArrays() {
 
 function drag(e) {
   draggedItem = e.target;
-  console.log(draggedItem);
+  dragging = true;
+  // console.log(draggedItem);
 }
 
 function allowDrop(e) {
@@ -192,6 +208,7 @@ function drop(e) {
   });
   const parent = listsColumns[currentColumn];
   parent.appendChild(draggedItem);
+  dragging = false;
   rebuildArrays();
 }
 // on load
